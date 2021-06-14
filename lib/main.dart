@@ -13,24 +13,39 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  int temperature = 0;
+  int temperature;
   String location = 'Lagos';
   int woeid = 1398823;
   String weather = 'clear';
+  String abbreviation = '';
+  String errorMessage = '';
 
-  void fetchSearch(String input) async {
-    var searchApiUrl = Uri.parse(
-        'https://www.metaweather.com/api/location/search/?query=$input');
-    var searchResult = await http.get(searchApiUrl);
-    var result = json.decode(searchResult.body)[0];
-
-    setState(() {
-      location = result["title"];
-      woeid = result["woeid"];
-    });
+  @override
+  void initState() {
+    super.initState();
+    fetchLocation();
   }
 
-  void fetchLocation() async {
+  Future<void> fetchSearch(String input) async {
+    try {
+      Uri searchApiUrl = Uri.parse(
+          'https://www.metaweather.com/api/location/search/?query=$input');
+      var searchResult = await http.get(searchApiUrl);
+      var result = json.decode(searchResult.body)[0];
+
+      setState(() {
+        location = result["title"];
+        woeid = result["woeid"];
+        errorMessage = '';
+      });
+    } catch (e) {
+      setState(() {
+        errorMessage = "We don't have data about this city. Try another one.";
+      });
+    }
+  }
+
+  Future<void> fetchLocation() async {
     var locationApiUrl = Uri.parse(
         'https://www.metaweather.com/api/location/${woeid.toString()}');
     var locationResult = await http.get(locationApiUrl);
@@ -41,12 +56,13 @@ class _MyAppState extends State<MyApp> {
     setState(() {
       temperature = data["the_temp"].round();
       weather = data["weather_state_name"].replaceAll(' ', '').toLowerCase();
+      abbreviation = data["weather_state_abbr"];
     });
   }
 
-  void onTextFieldSubmitted(String input) {
-    fetchSearch(input);
-    fetchLocation();
+  Future<void> onTextFieldSubmitted(String input) async {
+    await fetchSearch(input);
+    await fetchLocation();
   }
 
   @override
@@ -60,50 +76,77 @@ class _MyAppState extends State<MyApp> {
             fit: BoxFit.cover,
           ),
         ),
-        child: Scaffold(
-          backgroundColor: Colors.transparent,
-          body: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Column(
-                children: [
-                  Center(
-                    child: Text(
-                      temperature.toString() + ' °C',
-                      style: TextStyle(color: Colors.white, fontSize: 60.0),
+        child: temperature == null
+            ? Center(
+                child: CircularProgressIndicator(),
+              )
+            : Scaffold(
+                backgroundColor: Colors.transparent,
+                body: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Column(
+                      children: [
+                        Center(
+                          child: Image.network(
+                            'https://www.metaweather.com/static/img/weather/png/' +
+                                abbreviation +
+                                '.png',
+                            width: 100,
+                          ),
+                        ),
+                        Center(
+                          child: Text(
+                            temperature.toString() + ' °C',
+                            style:
+                                TextStyle(color: Colors.white, fontSize: 60.0),
+                          ),
+                        ),
+                        Center(
+                          child: Text(
+                            location,
+                            style:
+                                TextStyle(color: Colors.white, fontSize: 40.0),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  Center(
-                    child: Text(
-                      location,
-                      style: TextStyle(color: Colors.white, fontSize: 40.0),
+                    Column(
+                      children: [
+                        Container(
+                          width: 300,
+                          child: TextField(
+                            onSubmitted: (String input) {
+                              onTextFieldSubmitted(input);
+                            },
+                            style: TextStyle(color: Colors.white, fontSize: 25),
+                            decoration: InputDecoration(
+                              hintText: 'Search another location...',
+                              hintStyle: TextStyle(
+                                  color: Colors.white, fontSize: 18.0),
+                              prefixIcon:
+                                  Icon(Icons.search, color: Colors.white),
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding:
+                              const EdgeInsets.only(right: 32.0, left: 32.0),
+                          child: Text(
+                            errorMessage,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.redAccent,
+                              fontSize: 15,
+                            ),
+                          ),
+                        )
+                      ],
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-              Column(
-                children: [
-                  Container(
-                    width: 300,
-                    child: TextField(
-                      onSubmitted: (String input) {
-                        onTextFieldSubmitted(input);
-                      },
-                      style: TextStyle(color: Colors.white, fontSize: 25),
-                      decoration: InputDecoration(
-                        hintText: 'Search another location...',
-                        hintStyle:
-                            TextStyle(color: Colors.white, fontSize: 18.0),
-                        prefixIcon: Icon(Icons.search, color: Colors.white),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
