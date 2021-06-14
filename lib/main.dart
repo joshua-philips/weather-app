@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:intl/intl.dart';
+import 'package:weather_app/components/forecast_card.dart';
 
 void main() {
   runApp(MyApp());
@@ -18,14 +19,19 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   int temperature;
   String location = 'Lagos';
+
+  /// Where on Earth Id. Special api element used to describe location
   int woeid = 1398823;
   String weather = 'clear';
+
+  /// Two/Three letter decription of weather by MetaWeather, usually used to get weather image
   String abbreviation = '';
   String errorMessage = '';
 
-  List minTemperatureForecast = [];
-  List maxTemperatureForecast = [];
-  List abbreviationForecast = [];
+  // Forecast elements
+  List<int> minTemperatureForecast = [];
+  List<int> maxTemperatureForecast = [];
+  List<String> abbreviationForecast = [];
 
   @override
   void initState() {
@@ -38,8 +44,8 @@ class _MyAppState extends State<MyApp> {
     try {
       Uri searchApiUrl = Uri.parse(
           'https://www.metaweather.com/api/location/search/?query=$input');
-      var searchResult = await http.get(searchApiUrl);
-      var result = json.decode(searchResult.body)[0];
+      http.Response searchResult = await http.get(searchApiUrl);
+      Map result = json.decode(searchResult.body)[0];
 
       setState(() {
         location = result["title"];
@@ -54,12 +60,12 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> fetchLocation() async {
-    var locationApiUrl = Uri.parse(
+    Uri locationApiUrl = Uri.parse(
         'https://www.metaweather.com/api/location/${woeid.toString()}');
-    var locationResult = await http.get(locationApiUrl);
-    var result = json.decode(locationResult.body);
-    var consolidatedWeather = result["consolidated_weather"];
-    var data = consolidatedWeather[0];
+    http.Response locationResult = await http.get(locationApiUrl);
+    Map result = json.decode(locationResult.body);
+    List consolidatedWeather = result["consolidated_weather"];
+    Map data = consolidatedWeather[0];
 
     setState(() {
       temperature = data["the_temp"].round();
@@ -69,15 +75,17 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> fetchLocationDay() async {
-    DateTime today = DateTime.now();
+    minTemperatureForecast.clear();
+    maxTemperatureForecast.clear();
+    abbreviationForecast.clear();
 
-    for (var i = 0; i < 7; i++) {
-      var locationDayApiUrl = Uri.parse(
+    for (int i = 0; i < 7; i++) {
+      Uri locationDayApiUrl = Uri.parse(
           "https://www.metaweather.com/api/location/${woeid.toString()}" +
-              "/${DateFormat('y/M/d').format(today.add(Duration(days: i + 1))).toString()}");
-      var locationDayResult = await http.get(locationDayApiUrl);
-      var result = json.decode(locationDayResult.body);
-      var data = result[0];
+              "/${DateFormat('y/M/d').format(DateTime.now().add(Duration(days: i + 1))).toString()}");
+      http.Response locationDayResult = await http.get(locationDayApiUrl);
+      List result = json.decode(locationDayResult.body);
+      Map data = result[0];
 
       setState(() {
         minTemperatureForecast.add(data["min_temp"].round());
@@ -162,8 +170,8 @@ class _MyAppState extends State<MyApp> {
                       padding: const EdgeInsets.only(right: 20.0),
                       child: GestureDetector(
                         onTap: () async {
+                          // Position from geolocator
                           Position position = await _determinePosition();
-
                           // Using geocoding to get place name
                           placemarkFromCoordinates(
                                   position.latitude, position.longitude)
@@ -224,11 +232,12 @@ class _MyAppState extends State<MyApp> {
                             for (var i = 0;
                                 i < minTemperatureForecast.length;
                                 i++)
-                              forecastElement(
-                                  i + 1,
-                                  abbreviationForecast[i],
-                                  minTemperatureForecast[i],
-                                  maxTemperatureForecast[i]),
+                              ForecastCard(
+                                daysFromNow: i + 1,
+                                abbreviation: abbreviationForecast[i],
+                                minTemperature: minTemperatureForecast[i],
+                                maxTemperature: maxTemperatureForecast[i],
+                              ),
                           ],
                         ),
                       ),
@@ -276,51 +285,4 @@ class _MyAppState extends State<MyApp> {
       ),
     );
   }
-}
-
-Widget forecastElement(
-    daysFromNow, abbreviation, minTemperature, maxTemperature) {
-  var now = DateTime.now();
-  var oneDayFromNow = now.add(Duration(days: daysFromNow));
-  return Padding(
-    padding: const EdgeInsets.only(left: 16.0),
-    child: Container(
-      decoration: BoxDecoration(
-        color: Color.fromRGBO(205, 212, 228, 0.2),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: <Widget>[
-            Text(
-              DateFormat.E().format(oneDayFromNow),
-              style: TextStyle(color: Colors.white, fontSize: 25),
-            ),
-            Text(
-              DateFormat.MMMd().format(oneDayFromNow),
-              style: TextStyle(color: Colors.white, fontSize: 20),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 16.0, bottom: 16.0),
-              child: Image.network(
-                'https://www.metaweather.com/static/img/weather/png/' +
-                    abbreviation +
-                    '.png',
-                width: 50,
-              ),
-            ),
-            Text(
-              'High: ' + maxTemperature.toString() + ' °C',
-              style: TextStyle(color: Colors.white, fontSize: 20.0),
-            ),
-            Text(
-              'Low: ' + minTemperature.toString() + ' °C',
-              style: TextStyle(color: Colors.white, fontSize: 20.0),
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
 }
