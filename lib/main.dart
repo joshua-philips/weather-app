@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:intl/intl.dart';
 
 void main() {
   runApp(MyApp());
@@ -22,10 +23,15 @@ class _MyAppState extends State<MyApp> {
   String abbreviation = '';
   String errorMessage = '';
 
+  List minTemperatureForecast = [];
+  List maxTemperatureForecast = [];
+  List abbreviationForecast = [];
+
   @override
   void initState() {
     super.initState();
     fetchLocation();
+    fetchLocationDay();
   }
 
   Future<void> fetchSearch(String input) async {
@@ -62,12 +68,32 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
+  Future<void> fetchLocationDay() async {
+    DateTime today = DateTime.now();
+
+    for (var i = 0; i < 7; i++) {
+      var locationDayApiUrl = Uri.parse(
+          "https://www.metaweather.com/api/location/${woeid.toString()}" +
+              "/${DateFormat('y/M/d').format(today.add(Duration(days: i + 1))).toString()}");
+      var locationDayResult = await http.get(locationDayApiUrl);
+      var result = json.decode(locationDayResult.body);
+      var data = result[0];
+
+      setState(() {
+        minTemperatureForecast.add(data["min_temp"].round());
+        maxTemperatureForecast.add(data["max_temp"].round());
+        abbreviationForecast.add(data["weather_state_abbr"]);
+      });
+    }
+  }
+
   Future<void> onSubmitted(String input) async {
     setState(() {
       errorMessage = '';
     });
     await fetchSearch(input);
     await fetchLocation();
+    await fetchLocationDay();
   }
 
   /// Determine the current position of the device.
@@ -119,6 +145,8 @@ class _MyAppState extends State<MyApp> {
         decoration: BoxDecoration(
           image: DecorationImage(
             image: AssetImage('images/$weather.png'),
+            colorFilter: ColorFilter.mode(
+                Colors.black.withOpacity(0.6), BlendMode.dstATop),
             fit: BoxFit.cover,
           ),
         ),
@@ -160,6 +188,7 @@ class _MyAppState extends State<MyApp> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.max,
                     children: [
                       Column(
                         children: [
@@ -168,14 +197,14 @@ class _MyAppState extends State<MyApp> {
                               'https://www.metaweather.com/static/img/weather/png/' +
                                   abbreviation +
                                   '.png',
-                              width: 100,
+                              width: 80,
                             ),
                           ),
                           Center(
                             child: Text(
-                              temperature.toString() + ' °C',
+                              temperature.toString() + '°C',
                               style: TextStyle(
-                                  color: Colors.white, fontSize: 60.0),
+                                  color: Colors.white, fontSize: 40.0),
                             ),
                           ),
                           Center(
@@ -187,7 +216,23 @@ class _MyAppState extends State<MyApp> {
                           ),
                         ],
                       ),
-                      SizedBox(height: 100),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        physics: BouncingScrollPhysics(),
+                        child: Row(
+                          children: [
+                            for (var i = 0;
+                                i < minTemperatureForecast.length;
+                                i++)
+                              forecastElement(
+                                  i + 1,
+                                  abbreviationForecast[i],
+                                  minTemperatureForecast[i],
+                                  maxTemperatureForecast[i]),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 20),
                       Column(
                         children: [
                           Container(
@@ -231,4 +276,51 @@ class _MyAppState extends State<MyApp> {
       ),
     );
   }
+}
+
+Widget forecastElement(
+    daysFromNow, abbreviation, minTemperature, maxTemperature) {
+  var now = DateTime.now();
+  var oneDayFromNow = now.add(Duration(days: daysFromNow));
+  return Padding(
+    padding: const EdgeInsets.only(left: 16.0),
+    child: Container(
+      decoration: BoxDecoration(
+        color: Color.fromRGBO(205, 212, 228, 0.2),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: <Widget>[
+            Text(
+              DateFormat.E().format(oneDayFromNow),
+              style: TextStyle(color: Colors.white, fontSize: 25),
+            ),
+            Text(
+              DateFormat.MMMd().format(oneDayFromNow),
+              style: TextStyle(color: Colors.white, fontSize: 20),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 16.0, bottom: 16.0),
+              child: Image.network(
+                'https://www.metaweather.com/static/img/weather/png/' +
+                    abbreviation +
+                    '.png',
+                width: 50,
+              ),
+            ),
+            Text(
+              'High: ' + maxTemperature.toString() + ' °C',
+              style: TextStyle(color: Colors.white, fontSize: 20.0),
+            ),
+            Text(
+              'Low: ' + minTemperature.toString() + ' °C',
+              style: TextStyle(color: Colors.white, fontSize: 20.0),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 }
