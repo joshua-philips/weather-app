@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:intl/intl.dart';
+import 'package:weather_app/components/navigation_bar.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key key}) : super(key: key);
@@ -149,6 +150,7 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0.0,
+        automaticallyImplyLeading: false,
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 20.0),
@@ -169,7 +171,7 @@ class _HomePageState extends State<HomePage> {
               },
               child: Icon(
                 Icons.location_on,
-                size: 40,
+                size: 30,
                 color: Colors.grey,
               ),
             ),
@@ -177,37 +179,13 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       body: abbreviationForecast.isEmpty
-          ? Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  'Loading data...',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 25),
-                ),
-                Container(
-                  width: MediaQuery.of(context).size.width,
-                  height: 250,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage('images/world_map.png'),
-                      colorFilter: ColorFilter.mode(
-                          Theme.of(context)
-                              .scaffoldBackgroundColor
-                              .withOpacity(0.3),
-                          BlendMode.dstATop),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-                CircularProgressIndicator(),
-              ],
-            )
+          ? loading()
           : Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(
                   location,
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 25),
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 30),
                 ),
                 Container(
                   width: MediaQuery.of(context).size.width,
@@ -218,7 +196,7 @@ class _HomePageState extends State<HomePage> {
                       colorFilter: ColorFilter.mode(
                           Theme.of(context)
                               .scaffoldBackgroundColor
-                              .withOpacity(0.3),
+                              .withOpacity(0.2),
                           BlendMode.dstATop),
                       fit: BoxFit.cover,
                     ),
@@ -230,7 +208,7 @@ class _HomePageState extends State<HomePage> {
                         'https://www.metaweather.com/static/img/weather/png/' +
                             abbreviation +
                             '.png',
-                        width: 100,
+                        width: 120,
                       ),
                       Text(
                         temperature.toString() + '°C',
@@ -255,6 +233,40 @@ class _HomePageState extends State<HomePage> {
                 ),
               ],
             ),
+      bottomNavigationBar: NavigationBar(
+        page: 'home',
+        location: location,
+        abbreviationForecast: abbreviationForecast,
+        maxTemperatureForecast: maxTemperatureForecast,
+        minTemperatureForecast: minTemperatureForecast,
+        currentWeather: weather,
+      ),
+    );
+  }
+
+  Widget loading() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          'Loading data...',
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 30),
+        ),
+        Container(
+          width: MediaQuery.of(context).size.width,
+          height: 250,
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('images/world_map.png'),
+              colorFilter: ColorFilter.mode(
+                  Theme.of(context).scaffoldBackgroundColor.withOpacity(0.3),
+                  BlendMode.dstATop),
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
+        CircularProgressIndicator(),
+      ],
     );
   }
 }
