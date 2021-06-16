@@ -6,18 +6,18 @@ class NavigationBar extends StatelessWidget {
   /// 'home', 'explore', 'profile'
   final String page;
   final String location;
-  final String currentWeather;
   final List<int> minTemperatureForecast;
   final List<int> maxTemperatureForecast;
   final List<String> abbreviationForecast;
+  final List<String> weatherForecast;
   const NavigationBar(
       {Key key,
       @required this.page,
       this.location,
-      this.currentWeather,
       this.minTemperatureForecast,
       this.maxTemperatureForecast,
-      this.abbreviationForecast})
+      this.abbreviationForecast,
+      this.weatherForecast})
       : super(key: key);
 
   @override
@@ -26,7 +26,10 @@ class NavigationBar extends StatelessWidget {
     Color inactivePageColor =
         Theme.of(context).iconTheme.color.withOpacity(0.5);
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      margin: const EdgeInsets.only(left: 12, right: 12, bottom: 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(30),
+      ),
       child: Container(
         height: 60,
         decoration: BoxDecoration(
@@ -50,7 +53,7 @@ class NavigationBar extends StatelessWidget {
                     pageBuilder: (context, a1, a2) => HomePage(),
                     transitionDuration: Duration(seconds: 0),
                   );
-                  Navigator.of(context).push(route);
+                  Navigator.of(context).pushReplacement(route);
                 }
               },
             ),
@@ -67,6 +70,7 @@ class NavigationBar extends StatelessWidget {
                       maxTemperatureForecast: maxTemperatureForecast,
                       minTemperatureForecast: minTemperatureForecast,
                       abbreviationForecast: abbreviationForecast,
+                      weatherForecast: weatherForecast,
                     ),
                     transitionDuration: Duration(seconds: 0),
                   );

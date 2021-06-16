@@ -30,6 +30,7 @@ class _HomePageState extends State<HomePage> {
   // Forecast elements
   List<int> minTemperatureForecast = [];
   List<int> maxTemperatureForecast = [];
+  List<String> weatherForecast = [];
   List<String> abbreviationForecast = [];
 
   @override
@@ -68,7 +69,7 @@ class _HomePageState extends State<HomePage> {
 
     setState(() {
       temperature = data["the_temp"].round();
-      weather = data["weather_state_name"].replaceAll(' ', '').toLowerCase();
+      weather = data["weather_state_name"];
       abbreviation = data["weather_state_abbr"];
     });
   }
@@ -89,6 +90,7 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         minTemperatureForecast.add(data["min_temp"].round());
         maxTemperatureForecast.add(data["max_temp"].round());
+        weatherForecast.add(data["weather_state_name"]);
         abbreviationForecast.add(data["weather_state_abbr"]);
       });
     }
@@ -216,8 +218,7 @@ class _HomePageState extends State<HomePage> {
                             fontWeight: FontWeight.bold, fontSize: 40),
                       ),
                       Text(
-                        weather[0].toUpperCase() +
-                            weather.substring(1, weather.length),
+                        weather,
                         style: TextStyle(
                             fontWeight: FontWeight.w600, fontSize: 30),
                       ),
@@ -233,14 +234,17 @@ class _HomePageState extends State<HomePage> {
                 ),
               ],
             ),
-      bottomNavigationBar: NavigationBar(
-        page: 'home',
-        location: location,
-        abbreviationForecast: abbreviationForecast,
-        maxTemperatureForecast: maxTemperatureForecast,
-        minTemperatureForecast: minTemperatureForecast,
-        currentWeather: weather,
-      ),
+      bottomNavigationBar: abbreviationForecast.length > 5
+          ? NavigationBar(
+              page: 'home',
+              location: location,
+              abbreviationForecast: abbreviationForecast,
+              maxTemperatureForecast: maxTemperatureForecast,
+              minTemperatureForecast: minTemperatureForecast,
+              weatherForecast: weatherForecast,
+            )
+          : null,
+          
     );
   }
 
