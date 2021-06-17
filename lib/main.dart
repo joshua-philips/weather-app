@@ -16,18 +16,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-// TextField(
-// onSubmitted: (String input) {
-// onSubmitted(input);
-//},
-//style:
-//TextStyle(color: Colors.white, fontSize: 25),
-//decoration: InputDecoration(
-// hintText: 'Search location...',
-//hintStyle: TextStyle(
-// color: Colors.white, fontSize: 18.0),
-//prefixIcon:
-//Icon(Icons.search, color: Colors.white),
-//),
-//),

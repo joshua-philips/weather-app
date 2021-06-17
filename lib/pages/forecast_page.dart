@@ -81,7 +81,7 @@ class ForecastPage extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Today',
+                '$location today',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
               ),
               Row(
@@ -126,7 +126,7 @@ class ForecastPage extends StatelessWidget {
                     '.png',
                 width: 30,
               ),
-              SizedBox(width:5),
+              SizedBox(width: 5),
               Text(
                 weatherForecast[count],
               ),

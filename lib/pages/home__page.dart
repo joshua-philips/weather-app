@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:weather_app/components/forecast_card.dart';
 import 'dart:convert';
@@ -33,6 +34,8 @@ class _HomePageState extends State<HomePage> {
   List<String> weatherForecast = [];
   List<String> abbreviationForecast = [];
 
+  TextEditingController controller = TextEditingController();
+
   @override
   void initState() {
     super.initState();
@@ -47,14 +50,13 @@ class _HomePageState extends State<HomePage> {
       http.Response searchResult = await http.get(searchApiUrl);
       Map result = json.decode(searchResult.body)[0];
 
-      setState(() {
-        location = result["title"];
-        woeid = result["woeid"];
-        errorMessage = '';
-      });
+      location = result["title"];
+      woeid = result["woeid"];
+      errorMessage = '';
     } catch (e) {
       setState(() {
-        errorMessage = "We don't have data about this place.";
+        errorMessage =
+            "We don't have data about ${input.isNotEmpty ? input : 'your location'}";
       });
     }
   }
@@ -98,7 +100,7 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> onSubmitted(String input) async {
     setState(() {
-      errorMessage = '';
+      errorMessage = 'Loading...';
     });
     await fetchSearch(input);
     await fetchLocation();
@@ -113,12 +115,8 @@ class _HomePageState extends State<HomePage> {
     bool serviceEnabled;
     LocationPermission permission;
 
-    // Test if location services are enabled.
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      // Location services are not enabled don't continue
-      // accessing the position and request users of the
-      // App to enable the location services.
       return Future.error('Location services are disabled.');
     }
 
@@ -126,21 +124,14 @@ class _HomePageState extends State<HomePage> {
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        // Permissions are denied, next time you could try
-        // requesting permissions again (this is also where
-        // Android's shouldShowRequestPermissionRationale
-        // returned true. According to Android guidelines
-        // your App should show an explanatory UI now.
         return Future.error('Location permissions are denied');
       }
     }
-
     if (permission == LocationPermission.deniedForever) {
       // Permissions are denied forever, handle appropriately.
       return Future.error(
           'Location permissions are permanently denied, we cannot request permissions.');
     }
-
     // When we reach here, permissions are granted and we can
     // continue accessing the position of the device.
     return await Geolocator.getCurrentPosition();
@@ -149,90 +140,128 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0.0,
         automaticallyImplyLeading: false,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 20.0),
-            child: GestureDetector(
-              onTap: () async {
-                // Position from geolocator
-                Position position = await _determinePosition();
-                // Using geocoding to get place name
-                placemarkFromCoordinates(position.latitude, position.longitude)
-                    .then((placemarks) {
-                  if (placemarks.isNotEmpty) {
-                    print(placemarks[0].toJson());
-                    onSubmitted(placemarks[0].locality);
-                  } else {
-                    print('placemarks is empty');
+        title: Container(
+          height: 45,
+          width: MediaQuery.of(context).size.width * 0.7,
+          child: TextField(
+            controller: controller,
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: Colors.grey.shade200,
+              prefixIcon: Icon(Icons.search),
+              hintText: 'Search location...',
+              contentPadding: EdgeInsets.only(top: 5),
+              border: OutlineInputBorder(
+                borderSide: BorderSide.none,
+                borderRadius: BorderRadius.circular(30),
+              ),
+              suffixIcon: IconButton(
+                icon: Icon(Icons.close),
+                onPressed: () {
+                  if (controller.text.isNotEmpty) {
+                    controller.clear();
                   }
-                });
-              },
-              child: Icon(
-                Icons.location_on,
-                size: 30,
-                color: Colors.grey,
+                },
               ),
             ),
+            onSubmitted: (String input) {
+              if (controller.text.isNotEmpty) {
+                onSubmitted(input);
+              }
+            },
+          ),
+        ),
+        actions: [
+          GestureDetector(
+            onTap: () async {
+              // Position from geolocator
+              Position position = await _determinePosition();
+              // Using geocoding to get place name
+              placemarkFromCoordinates(position.latitude, position.longitude)
+                  .then((placemarks) {
+                if (placemarks.isNotEmpty) {
+                  print(placemarks[0].toJson());
+                  onSubmitted(placemarks[0].locality);
+                } else {
+                  print('placemarks is empty');
+                }
+              });
+            },
+            child: Icon(
+              Icons.location_on,
+              size: 35,
+              color: Colors.grey,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: CupertinoSwitch(value: false, onChanged: (value) {}),
           ),
         ],
       ),
       body: abbreviationForecast.isEmpty
           ? loading()
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  location,
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 30),
-                ),
-                Container(
-                  width: MediaQuery.of(context).size.width,
-                  height: 250,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage('images/world_map.png'),
-                      colorFilter: ColorFilter.mode(
-                          Theme.of(context)
-                              .scaffoldBackgroundColor
-                              .withOpacity(0.2),
-                          BlendMode.dstATop),
-                      fit: BoxFit.cover,
+          : SingleChildScrollView(
+              physics: BouncingScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    location,
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 30),
+                  ),
+                  Container(
+                    width: MediaQuery.of(context).size.width,
+                    height: 250,
+                    decoration: mapDecorationImage(),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Image.network(
+                          'https://www.metaweather.com/static/img/weather/png/' +
+                              abbreviation +
+                              '.png',
+                          width: 120,
+                        ),
+                        Text(
+                          temperature.toString() + '°C',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 40),
+                        ),
+                        Text(
+                          weather,
+                          style: TextStyle(
+                              fontWeight: FontWeight.w600, fontSize: 30),
+                        ),
+                      ],
                     ),
                   ),
-                  child: Column(
+                  SizedBox(height: 20),
+                  TodayCard(
+                    abbreviation: abbreviation,
+                    daysFromNow: 0,
+                    maxTemperature: maxTemperatureForecast[0],
+                    minTemperature: minTemperatureForecast[0],
+                  ),
+                  SizedBox(height: 25),
+                  Row(
+                    mainAxisSize: MainAxisSize.max,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Image.network(
-                        'https://www.metaweather.com/static/img/weather/png/' +
-                            abbreviation +
-                            '.png',
-                        width: 120,
-                      ),
-                      Text(
-                        temperature.toString() + '°C',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 40),
-                      ),
-                      Text(
-                        weather,
-                        style: TextStyle(
-                            fontWeight: FontWeight.w600, fontSize: 30),
-                      ),
+                      errorMessage.isNotEmpty && errorMessage != 'Loading...'
+                          ? Icon(Icons.error_outline)
+                          : Container(),
+                      SizedBox(width: 5),
+                      Text(errorMessage, style: TextStyle(fontSize: 18)),
                     ],
                   ),
-                ),
-                SizedBox(height: 40),
-                TodayCard(
-                  abbreviation: abbreviation,
-                  daysFromNow: 0,
-                  maxTemperature: maxTemperatureForecast[0],
-                  minTemperature: minTemperatureForecast[0],
-                ),
-              ],
+                ],
+              ),
             ),
       bottomNavigationBar: abbreviationForecast.length > 5
           ? NavigationBar(
@@ -244,7 +273,6 @@ class _HomePageState extends State<HomePage> {
               weatherForecast: weatherForecast,
             )
           : null,
-          
     );
   }
 
@@ -259,18 +287,22 @@ class _HomePageState extends State<HomePage> {
         Container(
           width: MediaQuery.of(context).size.width,
           height: 250,
-          decoration: BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage('images/world_map.png'),
-              colorFilter: ColorFilter.mode(
-                  Theme.of(context).scaffoldBackgroundColor.withOpacity(0.3),
-                  BlendMode.dstATop),
-              fit: BoxFit.cover,
-            ),
-          ),
+          decoration: mapDecorationImage(),
         ),
         CircularProgressIndicator(),
       ],
+    );
+  }
+
+  BoxDecoration mapDecorationImage() {
+    return BoxDecoration(
+      image: DecorationImage(
+        image: AssetImage('images/world_map.png'),
+        colorFilter: ColorFilter.mode(
+            Theme.of(context).scaffoldBackgroundColor.withOpacity(0.2),
+            BlendMode.dstATop),
+        fit: BoxFit.cover,
+      ),
     );
   }
 }

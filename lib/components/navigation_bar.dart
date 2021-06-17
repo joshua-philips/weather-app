@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:weather_app/pages/forecast_page.dart';
-import 'package:weather_app/pages/home__page.dart';
 
 class NavigationBar extends StatelessWidget {
   /// 'home', 'explore', 'profile'
@@ -49,11 +48,8 @@ class NavigationBar extends StatelessWidget {
               ),
               onPressed: () {
                 if (page != 'home') {
-                  Route route = PageRouteBuilder(
-                    pageBuilder: (context, a1, a2) => HomePage(),
-                    transitionDuration: Duration(seconds: 0),
-                  );
-                  Navigator.of(context).pushReplacement(route);
+                  Navigator.popUntil(
+                      context, (route) => !Navigator.canPop(context));
                 }
               },
             ),

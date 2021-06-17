@@ -91,20 +91,24 @@ class TodayCard extends StatelessWidget {
         children: [
           Text(
             DateFormat.E().format(oneDayFromNow),
-            style: TextStyle(fontSize: 25, fontWeight: FontWeight.w600),
+            style: TextStyle(fontSize: 30, fontWeight: FontWeight.w600),
           ),
           Text(
             DateFormat.yMMMd().format(oneDayFromNow),
-            style: TextStyle(fontSize: 20),
+            style: TextStyle(fontSize: 25),
           ),
           SizedBox(height: 10),
           Text(
             'High: ' + maxTemperature.toString() + '°C',
-            style: TextStyle(fontSize: 20.0, color: Colors.red),
+            style: TextStyle(
+                fontSize: 20.0, color: Colors.red, fontWeight: FontWeight.w600),
           ),
           Text(
             'Low: ' + minTemperature.toString() + '°C',
-            style: TextStyle(fontSize: 20.0, color: Colors.blue[600]),
+            style: TextStyle(
+                fontSize: 20.0,
+                color: Colors.blue[600],
+                fontWeight: FontWeight.w600),
           ),
         ],
       ),
