@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:weather_app/pages/home__page.dart';
+import 'package:weather_app/theme_notifier.dart';
 
 void main() {
   runApp(MyApp());
@@ -8,11 +10,15 @@ void main() {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Weather',
-      debugShowCheckedModeBanner: false,
-      // theme: ThemeData.dark(),
-      home: HomePage(),
+    return ChangeNotifierProvider<ThemeNotifier>(
+      create: (_) => ThemeNotifier(),
+      builder: (context, child) => MaterialApp(
+        title: 'Weather',
+        debugShowCheckedModeBanner: false,
+        theme:
+            context.watch<ThemeNotifier>().darkTheme ? darkTheme : lightTheme,
+        home: HomePage(),
+      ),
     );
   }
 }

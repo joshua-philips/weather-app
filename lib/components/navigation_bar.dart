@@ -33,9 +33,11 @@ class NavigationBar extends StatelessWidget {
         height: 60,
         decoration: BoxDecoration(
           boxShadow: [
-            BoxShadow(color: Colors.grey),
+            BoxShadow(color: Colors.black),
           ],
-          color: Theme.of(context).cardColor,
+          color: Theme.of(context).brightness == Brightness.light
+              ? Theme.of(context).scaffoldBackgroundColor
+              : Colors.grey[800],
           borderRadius: BorderRadius.circular(30),
         ),
         child: Row(

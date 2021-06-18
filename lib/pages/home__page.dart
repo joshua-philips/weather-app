@@ -8,6 +8,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:intl/intl.dart';
 import 'package:weather_app/components/navigation_bar.dart';
+import 'package:provider/provider.dart';
+import 'package:weather_app/theme_notifier.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key key}) : super(key: key);
@@ -150,18 +152,20 @@ class _HomePageState extends State<HomePage> {
           width: MediaQuery.of(context).size.width * 0.7,
           child: TextField(
             controller: controller,
+            style: TextStyle(color: Colors.black),
             decoration: InputDecoration(
               filled: true,
               fillColor: Colors.grey.shade200,
-              prefixIcon: Icon(Icons.search),
+              prefixIcon: Icon(Icons.search, color: Colors.grey),
               hintText: 'Search location...',
+              hintStyle: TextStyle(color: Colors.grey),
               contentPadding: EdgeInsets.only(top: 5),
               border: OutlineInputBorder(
                 borderSide: BorderSide.none,
                 borderRadius: BorderRadius.circular(30),
               ),
               suffixIcon: IconButton(
-                icon: Icon(Icons.close),
+                icon: Icon(Icons.close, color: Colors.grey),
                 onPressed: () {
                   if (controller.text.isNotEmpty) {
                     controller.clear();
@@ -200,7 +204,15 @@ class _HomePageState extends State<HomePage> {
           ),
           Padding(
             padding: const EdgeInsets.only(right: 8.0),
-            child: CupertinoSwitch(value: false, onChanged: (value) {}),
+            child: Consumer<ThemeNotifier>(
+              builder: (context, notifier, child) => CupertinoSwitch(
+                value: notifier.darkTheme,
+                onChanged: (value) {
+                  notifier.toggleTheme();
+                },
+                activeColor: Colors.grey[700],
+              ),
+            ),
           ),
         ],
       ),
@@ -211,9 +223,10 @@ class _HomePageState extends State<HomePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  SizedBox(height: 10),
                   Text(
                     location,
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 30),
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 35),
                   ),
                   Container(
                     width: MediaQuery.of(context).size.width,
@@ -231,24 +244,24 @@ class _HomePageState extends State<HomePage> {
                         Text(
                           temperature.toString() + '°C',
                           style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 40),
+                              fontWeight: FontWeight.bold, fontSize: 35),
                         ),
                         Text(
                           weather,
                           style: TextStyle(
-                              fontWeight: FontWeight.w600, fontSize: 30),
+                              fontWeight: FontWeight.w600, fontSize: 20),
                         ),
                       ],
                     ),
                   ),
-                  SizedBox(height: 20),
+                  SizedBox(height: 5),
                   TodayCard(
                     abbreviation: abbreviation,
                     daysFromNow: 0,
                     maxTemperature: maxTemperatureForecast[0],
                     minTemperature: minTemperatureForecast[0],
                   ),
-                  SizedBox(height: 25),
+                  SizedBox(height: 20),
                   Row(
                     mainAxisSize: MainAxisSize.max,
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -280,9 +293,10 @@ class _HomePageState extends State<HomePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
+        SizedBox(height: 10),
         Text(
           'Loading data...',
-          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 30),
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 35),
         ),
         Container(
           width: MediaQuery.of(context).size.width,

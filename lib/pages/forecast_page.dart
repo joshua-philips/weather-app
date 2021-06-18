@@ -25,28 +25,32 @@ class ForecastPage extends StatelessWidget {
         page: 'explore',
       ),
       extendBody: true,
-      body: SafeArea(
-        child: CustomScrollView(
-          physics: BouncingScrollPhysics(),
-          slivers: [
-            SliverAppBar(
-              centerTitle: true,
-              floating: true,
-              elevation: 0,
-              title: Text(
-                'Forecast',
-                style: TextStyle(color: Colors.black),
+      body: CustomScrollView(
+        physics: BouncingScrollPhysics(),
+        slivers: [
+          SliverAppBar(
+            centerTitle: true,
+            floating: true,
+            elevation: 0,
+            title: Text(
+              'Forecast',
+              style: TextStyle(
+                fontSize: 20,
+                color: Theme.of(context).brightness == Brightness.light
+                    ? Colors.black
+                    : Colors.white,
               ),
-              backgroundColor: Colors.transparent,
             ),
-            SliverList(
-              delegate: SliverChildListDelegate([
-                buildHeader(context),
-                buildListTile(context),
-              ]),
-            ),
-          ],
-        ),
+            backgroundColor: Colors.transparent,
+          ),
+          SliverList(
+            delegate: SliverChildListDelegate([
+              buildHeader(context),
+              buildListTile(context),
+              SizedBox(height: 60),
+            ]),
+          ),
+        ],
       ),
     );
   }
@@ -109,6 +113,23 @@ class ForecastPage extends StatelessWidget {
 
   Widget buildListTile(BuildContext context) {
     List<Widget> widgetList = [];
+    widgetList.add(
+      Column(
+        children: [
+          Container(
+            width: 80,
+            height: 6,
+            decoration: BoxDecoration(
+              color: Theme.of(context).brightness == Brightness.light
+                  ? Colors.grey
+                  : Colors.white,
+              borderRadius: BorderRadius.circular(80),
+            ),
+          ),
+          SizedBox(height: 10),
+        ],
+      ),
+    );
     for (int count = 1; count < minTemperatureForecast.length; count++) {
       widgetList.add(
         ListTile(
@@ -118,6 +139,7 @@ class ForecastPage extends StatelessWidget {
               Text(
                 DateFormat.E()
                     .format(DateTime.now().add(Duration(days: count))),
+                style: TextStyle(fontSize: 18),
               ),
               Spacer(),
               Image.network(
@@ -129,12 +151,14 @@ class ForecastPage extends StatelessWidget {
               SizedBox(width: 5),
               Text(
                 weatherForecast[count],
+                style: TextStyle(fontSize: 18),
               ),
               Spacer(),
               Text(
                 minTemperatureForecast[count].toString() +
                     '/' +
                     maxTemperatureForecast[count].toString(),
+                style: TextStyle(fontSize: 18),
               ),
             ],
           ),
@@ -146,12 +170,17 @@ class ForecastPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(30),
-          topRight: Radius.circular(30),
+          topLeft: Radius.circular(40),
+          topRight: Radius.circular(40),
+          bottomLeft: Radius.circular(40),
+          bottomRight: Radius.circular(40),
         ),
       ),
-      child: Column(
-        children: widgetList,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 10, left: 8, right: 8),
+        child: Column(
+          children: widgetList,
+        ),
       ),
     );
   }
