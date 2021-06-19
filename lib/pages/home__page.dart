@@ -52,8 +52,8 @@ class _HomePageState extends State<HomePage> {
       http.Response searchResult = await http.get(searchApiUrl);
       Map result = json.decode(searchResult.body)[0];
 
-      location = result["title"];
-      woeid = result["woeid"];
+      location = result['title'];
+      woeid = result['woeid'];
       errorMessage = '';
     } catch (e) {
       setState(() {
@@ -68,16 +68,17 @@ class _HomePageState extends State<HomePage> {
         'https://www.metaweather.com/api/location/${woeid.toString()}');
     http.Response locationResult = await http.get(locationApiUrl);
     Map result = json.decode(locationResult.body);
-    List consolidatedWeather = result["consolidated_weather"];
+    List consolidatedWeather = result['consolidated_weather'];
     Map data = consolidatedWeather[0];
 
     setState(() {
-      temperature = data["the_temp"].round();
-      weather = data["weather_state_name"];
-      abbreviation = data["weather_state_abbr"];
+      temperature = data['the_temp'].round();
+      weather = data['weather_state_name'];
+      abbreviation = data['weather_state_abbr'];
     });
   }
 
+  /// Get forecast data from api (includes current day)
   Future<void> fetchLocationDay() async {
     minTemperatureForecast.clear();
     maxTemperatureForecast.clear();
@@ -85,17 +86,17 @@ class _HomePageState extends State<HomePage> {
 
     for (int i = 0; i < 8; i++) {
       Uri locationDayApiUrl = Uri.parse(
-          "https://www.metaweather.com/api/location/${woeid.toString()}" +
-              "/${DateFormat('y/M/d').format(DateTime.now().add(Duration(days: i))).toString()}");
+          'https://www.metaweather.com/api/location/${woeid.toString()}' +
+              '/${DateFormat('y/M/d').format(DateTime.now().add(Duration(days: i))).toString()}');
       http.Response locationDayResult = await http.get(locationDayApiUrl);
       List result = json.decode(locationDayResult.body);
       Map data = result[0];
 
       setState(() {
-        minTemperatureForecast.add(data["min_temp"].round());
-        maxTemperatureForecast.add(data["max_temp"].round());
-        weatherForecast.add(data["weather_state_name"]);
-        abbreviationForecast.add(data["weather_state_abbr"]);
+        minTemperatureForecast.add(data['min_temp'].round());
+        maxTemperatureForecast.add(data['max_temp'].round());
+        weatherForecast.add(data['weather_state_name']);
+        abbreviationForecast.add(data['weather_state_abbr']);
       });
     }
   }
@@ -147,39 +148,7 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: Colors.transparent,
         elevation: 0.0,
         automaticallyImplyLeading: false,
-        title: Container(
-          height: 45,
-          width: MediaQuery.of(context).size.width * 0.7,
-          child: TextField(
-            controller: controller,
-            style: TextStyle(color: Colors.black),
-            decoration: InputDecoration(
-              filled: true,
-              fillColor: Colors.grey.shade200,
-              prefixIcon: Icon(Icons.search, color: Colors.grey),
-              hintText: 'Search location...',
-              hintStyle: TextStyle(color: Colors.grey),
-              contentPadding: EdgeInsets.only(top: 5),
-              border: OutlineInputBorder(
-                borderSide: BorderSide.none,
-                borderRadius: BorderRadius.circular(30),
-              ),
-              suffixIcon: IconButton(
-                icon: Icon(Icons.close, color: Colors.grey),
-                onPressed: () {
-                  if (controller.text.isNotEmpty) {
-                    controller.clear();
-                  }
-                },
-              ),
-            ),
-            onSubmitted: (String input) {
-              if (controller.text.isNotEmpty) {
-                onSubmitted(input);
-              }
-            },
-          ),
-        ),
+        title: buildSearchTextField(context),
         actions: [
           GestureDetector(
             onTap: () async {
@@ -286,6 +255,42 @@ class _HomePageState extends State<HomePage> {
               weatherForecast: weatherForecast,
             )
           : null,
+    );
+  }
+
+  Container buildSearchTextField(BuildContext context) {
+    return Container(
+      height: 45,
+      width: MediaQuery.of(context).size.width * 0.7,
+      child: TextField(
+        controller: controller,
+        style: TextStyle(color: Colors.black),
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: Colors.grey.shade200,
+          prefixIcon: Icon(Icons.search, color: Colors.grey),
+          hintText: 'Search location...',
+          hintStyle: TextStyle(color: Colors.grey),
+          contentPadding: EdgeInsets.only(top: 5),
+          border: OutlineInputBorder(
+            borderSide: BorderSide.none,
+            borderRadius: BorderRadius.circular(30),
+          ),
+          suffixIcon: IconButton(
+            icon: Icon(Icons.close, color: Colors.grey),
+            onPressed: () {
+              if (controller.text.isNotEmpty) {
+                controller.clear();
+              }
+            },
+          ),
+        ),
+        onSubmitted: (String input) {
+          if (controller.text.isNotEmpty) {
+            onSubmitted(input);
+          }
+        },
+      ),
     );
   }
 

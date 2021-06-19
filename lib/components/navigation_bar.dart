@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:weather_app/pages/forecast_page.dart';
 
 class NavigationBar extends StatelessWidget {
-  /// 'home', 'explore', 'profile'
+  /// 'home', 'forecast', 'profile'
   final String page;
   final String location;
   final List<int> minTemperatureForecast;
@@ -58,10 +58,10 @@ class NavigationBar extends StatelessWidget {
             IconButton(
               icon: Icon(
                 Icons.explore_outlined,
-                color: page == 'explore' ? activePageColor : inactivePageColor,
+                color: page == 'forecast' ? activePageColor : inactivePageColor,
               ),
               onPressed: () {
-                if (page != 'explore') {
+                if (page != 'forecast') {
                   Route route = PageRouteBuilder(
                     pageBuilder: (context, a1, a2) => ForecastPage(
                       location: location,

@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
     return ChangeNotifierProvider<ThemeNotifier>(
       create: (_) => ThemeNotifier(),
       builder: (context, child) => MaterialApp(
-        title: 'Weather',
+        title: 'Weather App',
         debugShowCheckedModeBanner: false,
         theme:
             context.watch<ThemeNotifier>().darkTheme ? darkTheme : lightTheme,

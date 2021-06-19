@@ -22,7 +22,7 @@ class ForecastPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       bottomNavigationBar: NavigationBar(
-        page: 'explore',
+        page: 'forecast',
       ),
       extendBody: true,
       body: CustomScrollView(
